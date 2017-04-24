@@ -5,8 +5,6 @@ using System.Drawing;
 using VoronoiCSharpLib;
 using LinearAlgebra;
 using Esri.FileGDB;
-using OSGeo.GDAL;
-using OSGeo.OGR;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Controls;
 using ESRI.ArcGIS.Geometry;

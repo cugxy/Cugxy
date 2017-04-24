@@ -76,6 +76,10 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>D:\Program Files\LearnProgram\ArcGIS\DeveloperKit10.2\DotNet\ESRI.ArcGIS.Version.dll</HintPath>
     </Reference>
+    <Reference Include="Esri.FileGDBAPI, Version=1.4.0.183, Culture=neutral, PublicKeyToken=8fc3cc631e44ad86, processorArchitecture=x86">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\DevEnv\bin\Esri.FileGDBAPI.dll</HintPath>
+    </Reference>
     <Reference Include="LinearAlgebra, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\..\DevEnv\bin\LinearAlgebra.dll</HintPath>
