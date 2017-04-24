@@ -4,9 +4,9 @@ using System.IO;
 using System.Drawing;
 using VoronoiCSharpLib;
 using LinearAlgebra;
-//using Esri.FileGDB;
-//using OSGeo.GDAL;
-//using OSGeo.OGR;
+using Esri.FileGDB;
+using OSGeo.GDAL;
+using OSGeo.OGR;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Controls;
 using ESRI.ArcGIS.Geometry;
@@ -16,114 +16,14 @@ using ESRI.ArcGIS.Carto;
 using ESRI.ArcGIS.Display;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS;
+using LinearAlgebra.VectorAlgebra;
+using CugXy;
 
 namespace CSharpTest
 {
 
     class Program
     {
-        ////测试 gdal for c#
-        //static void test()
-        //{
-        //    Ogr.RegisterAll();
-        //    DataSource data = Ogr.Open("E:\\data\\test_1.gdb", 0);
-        //    Layer layer = data.GetLayerByName("first1");
-        //    long geomCount = layer.GetFeatureCount(0);
-        //    for (int i = 1; i <= geomCount; i++)
-        //    {
-        //        OSGeo.OGR.Feature feature = layer.GetFeature(i);
-        //        int ID = feature.GetFieldAsInteger(6);
-        //        int enumId = feature.GetFieldAsInteger(7);
-        //        Geometry geom = feature.GetGeometryRef();
-        //        string name = geom.GetGeometryName();
-        //        Geometry g = geom.GetCurveGeometry(null);
-        //        int a = geom.GetGeometryCount();
-        //        if (geom.GetGeometryType() == OSGeo.OGR.wkbGeometryType.wkbMultiLineString)
-        //        {
-        //            int pointCount = geom.GetPointCount();
-        //            double length = geom.Length();
-
-        //        }
-        //    }
-        //}
-        ////读取文件,获取结点信息by fileGDBAPI
-        //static List<Esri.FileGDB.Point> ReadFileToGetPoint(String filePath, String tablePath)
-        //{
-        //    try
-        //    {
-        //        List<Esri.FileGDB.Point> points = new List<Esri.FileGDB.Point>();
-        //        Geodatabase geodatabase = Geodatabase.Open(filePath);
-        //        Esri.FileGDB.Table netTable = geodatabase.OpenTable(tablePath);
-        //        String ruleStr = "";
-        //        RowCollection attrQueryRows = netTable.Search("SHAPE", ruleStr, RowInstance.Recycle);
-        //        foreach (var oneRow in attrQueryRows)
-        //        {
-        //            PointShapeBuffer geometry = oneRow.GetGeometry();
-        //            Esri.FileGDB.Point point = geometry.point;
-        //            points.Add(point);
-        //        }
-        //        netTable.Close();
-        //        geodatabase.Close();
-        //        return points;
-        //    }
-        //    catch (FileGDBException ex)
-        //    {
-        //        Console.WriteLine("{0} - {1}", ex.Message, ex.ErrorCode);
-        //        return null;
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        Console.WriteLine("General exception.  " + ex.Message);
-        //        return null;
-        //    }
-        //}
-
-        ////读取文件，获取结点信息By gdal
-        //static Dictionary<int, PointF> GetPoint(string filePath, string layerName)
-        //{
-        //    Dictionary<int, PointF> result = new Dictionary<int, PointF>();
-        //    Ogr.RegisterAll();
-        //    DataSource dataSouce = Ogr.Open(filePath, 0);
-        //    if (dataSouce == null)
-        //    {
-        //        Console.WriteLine("data souce error");
-        //        return null;
-        //    }
-        //    Layer layer = dataSouce.GetLayerByName(layerName);
-        //    if (layer == null)
-        //    {
-        //        Console.WriteLine("layer error");
-        //        return null;
-        //    }
-        //    long count = layer.GetFeatureCount(0);
-        //    int id = 0;
-        //    for (int i = 1; i <= count; i++)
-        //    {
-        //        OSGeo.OGR.Feature feature = layer.GetFeature(i);
-        //        if (feature == null)
-        //        {
-        //            Console.WriteLine("feature error.  i =" + i);
-        //            continue;
-        //        }
-        //        //int Id = feature.GetFieldAsInteger(1);
-        //        Geometry geom = feature.GetGeometryRef();
-        //        if (geom == null)
-        //        {
-        //            Console.WriteLine("geometry error.  i =" + i);
-        //            continue;
-        //        }
-        //        if (geom.GetGeometryType() == OSGeo.OGR.wkbGeometryType.wkbPoint)
-        //        {
-        //            double[] point = new double[3];
-        //            geom.GetPoint(0, point);
-        //            PointF pointf = new PointF((float)point[0], (float)point[1]);
-        //            result.Add(id, pointf);
-        //            id++;
-        //        }
-        //    }
-        //    return result;
-        //}
-
         //读取几何网络，获取结点及边的信息 by arcgis engine
         static IGeometricNetwork ReadNet(string filePath, string dataSetName, string netName)
         {
@@ -148,17 +48,6 @@ namespace CSharpTest
                 return null;
             }
             return pGeomNet;
-            // INetwork network = pGeomNet.Network;
-            // int edgeCount = network.EdgeCount;
-            // int junctionCount = network.JunctionCount;
-
-            // IGeometry pEdge =  pGeomNet.GeometryForEdgeEID[1];
-            // IGeometry pPoint = pGeomNet.GeometryForJunctionEID[1];
-
-            //if(pPoint.GeometryType == esriGeometryType.esriGeometryPoint)
-            // {
-            //     IPoint ipoint = (pPoint as IPoint);
-            // }
         }
 
         static List<Dictionary<int, PointF>> OneToOneMatch(IGeometricNetwork pGeomNet1, IGeometricNetwork pGeomNet2, double deviation = 3000.0)
@@ -166,86 +55,178 @@ namespace CSharpTest
             List<Dictionary<int, PointF>> result = new List<Dictionary<int, PointF>>();
             Dictionary<int, PointF> result1 = new Dictionary<int, PointF>();
             Dictionary<int, PointF> result2 = new Dictionary<int, PointF>();
-            INetwork pNet1 = pGeomNet1.Network;
-            if (pNet1 == null)
+            if (pGeomNet1 == null)
             {
-                Console.WriteLine("network error");
+                Console.WriteLine("IGeometricNetwork 1 error");
                 return null;
             }
-            int edgeCount1 = pNet1.EdgeCount;
-            int junctionCount1 = pNet1.JunctionCount;
-            List<IPoint> points1 = new List<IPoint>();
-            for (int i1 = 1; i1 <= junctionCount1; i1++)
+            if (pGeomNet2 == null)
             {
-                IGeometry pGeom = pGeomNet1.GeometryForJunctionEID[i1];
-                if (pGeom != null && pGeom.GeometryType == esriGeometryType.esriGeometryPoint)
-                {
-                    points1.Add(pGeom as IPoint);
-                }
-            }
-
-            INetwork pNet2 = pGeomNet2.Network;
-            if (pNet1 == null)
-            {
-                Console.WriteLine("network error");
+                Console.WriteLine("IGeometricNetwork 2 error");
                 return null;
             }
-            int edgeCount2 = pNet2.EdgeCount;
-            int junctionCount2 = pNet2.JunctionCount;
-            List<IPoint> points2 = new List<IPoint>();
-            for (int i2 = 1; i2 <= junctionCount2; i2++)
-            {
-                IGeometry pGeom = pGeomNet2.GeometryForJunctionEID[i2];
-                if (pGeom != null && pGeom.GeometryType == esriGeometryType.esriGeometryPoint)
-                {
-                    points2.Add(pGeom as IPoint);
-                }
-            }
-
+            int junctionCount1 = pGeomNet1.Network.JunctionCount;
+            int junctionCount2 = pGeomNet2.Network.JunctionCount;
+            DataStruct ds1;
+            DataStruct ds2;
             if (junctionCount1 < junctionCount2)
             {
-                int id = 0;
-                foreach (var onePointInNet1 in points1)
+                ds1 = new DataStruct(pGeomNet1);
+                ds2 = new DataStruct(pGeomNet2);
+            }
+            else
+            {
+                ds1 = new DataStruct(pGeomNet2);
+                ds2 = new DataStruct(pGeomNet1);
+            }
+            int id = 0;
+            foreach (var onePointInNet1 in ds1.MyPoints)
+            {
+                //pGeomNet2.JunctionElement[onePoint];
+                //如何获取该点位置在第二张网络中附近的点呢
+                //如果在第二张网络中遍历所有的点 判断距离 会不会太慢
+                List<MyPoint> mayMatchPointsInNet2 = new List<MyPoint>();
+                foreach (var onePointInNet2 in ds2.MyPoints)
                 {
-                    //pGeomNet2.JunctionElement[onePoint];
-                    //如何获取该点位置在第二张网络中附近的点呢
-                    //如果在第二张网络中遍历所有的点 判断距离 会不会太慢
-                    List<IPoint> mayMatchPointsInNet2 = new List<IPoint>();
-                    foreach (var onePointInNet2 in points2)
+                    double subX = onePointInNet1.point.X - onePointInNet2.point.X;
+                    double subY = onePointInNet1.point.Y - onePointInNet2.point.Y;
+                    //是否可以用Compare函数
+                    //onePointInNet1.Compare(onePointInNet2);
+                    if ((subX * subX + subY * subY) < deviation)
                     {
-                        double subX = onePointInNet1.X - onePointInNet2.X;
-                        double subY = onePointInNet1.Y - onePointInNet2.Y;
-                        //是否可以用Compare函数
-                        //onePointInNet1.Compare(onePointInNet2);
-                        if ((subX * subX + subY * subY) < deviation)
-                        {
-                            mayMatchPointsInNet2.Add(onePointInNet2);
-                        }
-                    }
-                    if (0 == mayMatchPointsInNet2.Count) //当情况为 1 ： 0
-                    {
-
-
-                    }
-                    else if (1 == mayMatchPointsInNet2.Count) // 当情况为1 ：1
-                    {
-                        result1.Add(id, new PointF((float)onePointInNet1.X, (float)onePointInNet1.Y));
-                        result2.Add(id, new PointF((float)mayMatchPointsInNet2[0].X, (float)mayMatchPointsInNet2[0].Y));
-                        id++;
-                    }
-                    else // 当情况为 1：n  未考虑到m：n的情况  
-                    {
-                        //如何获取当前结点相连的边（即拓扑关系）
-                        //var a = pGeomNet1.EdgeElement[onePointInNet1];
-                        //var b = pGeomNet1.GeometryForEdgeEID[a];
-                        //IPolyline line = b as IPolyline;
-                        //var f = line.FromPoint;
-                        //var t = line.ToPoint;
-
+                        mayMatchPointsInNet2.Add(onePointInNet2);
                     }
                 }
-            }
+                if (0 == mayMatchPointsInNet2.Count) //当情况为 1 ： 0
+                {
+                    //考虑是否欠妥
+                    result1.Add(id, new PointF((float)onePointInNet1.point.X, (float)onePointInNet1.point.Y));
+                    result2.Add(id, new PointF((float)mayMatchPointsInNet2[0].point.X, (float)mayMatchPointsInNet2[0].point.Y));
+                    id++;
+                }
+                else if (1 == mayMatchPointsInNet2.Count) // 当情况为1 ：1
+                {
+                    result1.Add(id, new PointF((float)onePointInNet1.point.X, (float)onePointInNet1.point.Y));
+                    result2.Add(id, new PointF((float)mayMatchPointsInNet2[0].point.X, (float)mayMatchPointsInNet2[0].point.Y));
+                    id++;
+                }
+                else // 当情况为 1：n  未考虑到m：n的情况  
+                {
+                    //对于每一个待匹配结点
+                    double maxSingn = 0.0;
+                    int matchPoint = 0;
+                    //foreach(var oneMatchPoint in mayMatchPointsInNet2)
+                    for (int matchPointi = 0; matchPointi < mayMatchPointsInNet2.Count; matchPointi++)
+                    {
+                        var oneMatchPoint = mayMatchPointsInNet2[matchPointi];
+                        //如何衡量 向量
+                        //对于源结点中的每一条关联边
+                        int num1 = onePointInNet1.lines.Count;//源结点的度
+                        int num2 = oneMatchPoint.lines.Count;//待匹配结点的度
+                        double[,] matchM = new double[num1, num2];
+                        double Singn = 0.0;
+                        int i = 0;
+                        foreach (var oneEdge1 in onePointInNet1.lines)
+                        {
+                            int j = 0;
+                            //构建向量
+                            IPoint fPoint1 = oneEdge1.FromPoint;
+                            IPoint tPoint1 = oneEdge1.ToPoint;
+                            double length1 = oneEdge1.Length;
+                            Vector XX = null;
+                            if (onePointInNet1.point.X == fPoint1.X && onePointInNet1.point.Y == fPoint1.Y)
+                            {
+                                XX = new Vector(new double[2] { tPoint1.X - fPoint1.X, tPoint1.Y - fPoint1.Y }, VectorType.Row);
+                            }
+                            else
+                            {
+                                XX = new Vector(new double[2] { fPoint1.X - tPoint1.X, fPoint1.Y - tPoint1.Y }, VectorType.Row);
+                            }
+                            //对于待匹配结点的每一条关联边
+                            foreach (var oneEdge2 in oneMatchPoint.lines)
+                            {
+                                IPoint fPoint2 = oneEdge2.FromPoint;
+                                IPoint tPoint2 = oneEdge2.ToPoint;
+                                Vector YY = null;
+                                if (oneMatchPoint.point.X == fPoint2.X && oneMatchPoint.point.Y == fPoint2.Y)
+                                {
+                                    ICurve pLine;
+                                    oneEdge2.GetSubcurve(0, length1, false, out pLine);
+                                    IPoint fnPoint = pLine.FromPoint;
+                                    IPoint tnPoint = pLine.ToPoint;
+                                    YY = new Vector(new double[2] { tnPoint.X - fnPoint.X, tnPoint.Y - fnPoint.Y }, VectorType.Row);
+                                    //按长度在边上取点后的向量
+                                }
+                                else
+                                {
+                                    ICurve pLine;
+                                    double length2 = oneEdge2.Length;
+                                    oneEdge2.GetSubcurve(length2, length2 - length1, false, out pLine);
+                                    IPoint fnPoint = pLine.FromPoint;
+                                    IPoint tnPoint = pLine.ToPoint;
+                                    YY = new Vector(new double[2] { tnPoint.X - fnPoint.X, tnPoint.Y - fnPoint.Y }, VectorType.Row);
+                                }//else 
+                                 //计算向量匹配值 并填入矩阵中 
+                                double matchValue = 0.0;
+                                double XXLength = Math.Sqrt(XX.Elements[0] * XX.Elements[0] + XX.Elements[1] * XX.Elements[1]);
+                                double YYLength = Math.Sqrt(YY.Elements[0] * YY.Elements[0] + YY.Elements[1] * YY.Elements[1]);
+                                if (XXLength > YYLength)
+                                {
+                                    matchValue = (XX.Elements[0] * YY.Elements[0] + XX.Elements[1] * YY.Elements[1]) / (XXLength * XXLength);
+                                }
+                                else
+                                {
+                                    matchValue = (XX.Elements[0] * YY.Elements[0] + XX.Elements[1] * YY.Elements[1]) / (YYLength * YYLength);
+                                }
+                                matchM[i, j] = matchValue;
+                                j++;
+                            }//foreach  oneMatchPoint.Line
+                            i++;
+                        }//foreach  onePointInNet1.lines
+                         //如果matchM[h, k]既是第 h 行最大值，又是第 k 列最大值，那么 h，k 之间存在匹配关系
 
+                        for (int num1i = 0; num1i < num1; num1i++)
+                        {
+                            double tempMax = 0.0;
+                            int tempRow = 0;
+                            int tempCol = 0;
+                            for (int h = 0; h < num1; h++)
+                            {
+                                for (int k = 0; k < num2; k++)
+                                {
+                                    if (matchM[h, k] > tempMax)
+                                    {
+                                        tempMax = matchM[h, k];
+                                        tempRow = h;
+                                        tempCol = k;
+                                    }
+                                }
+                            }
+                            //tempMax 一定大与等于 0 
+                            Singn += tempMax;
+                            for (int h = 0; h < num1; h++)
+                            {
+                                matchM[h, tempCol] = 0.0;
+                            }
+                            for (int k = 0; k < num2; k++)
+                            {
+                                matchM[tempRow, k] = 0.0;
+                            }
+                        }
+                        if (Singn > maxSingn)
+                        {
+                            maxSingn = Singn;
+                            matchPoint = matchPointi;
+                        }
+                    }// foreach  mayMatchPointsInNet2
+                    result1.Add(id, new PointF((float)onePointInNet1.point.X, (float)onePointInNet1.point.Y));
+                    result2.Add(id, new PointF((float)mayMatchPointsInNet2[matchPoint].point.X, (float)mayMatchPointsInNet2[matchPoint].point.Y));
+                    id++;
+                }//else 当为 1：n
+            }//foreach MyPoints
+
+            result.Add(result1);
+            result.Add(result2);
             return result;
         }
 
@@ -353,60 +334,104 @@ namespace CSharpTest
 
         static void Main(string[] args)
         {
-            //arcGIS engine权限注册
-            ESRI.ArcGIS.RuntimeManager.BindLicense(ProductCode.EngineOrDesktop);
-            //test();
-            //GetPoint("E:\\data\\test_1.gdb", "test_Net1");
-            IGeometricNetwork pGNet1 = ReadNet("E:\\data\\arcgistest.gdb", "test", "test_Net2");
-            IGeometricNetwork pGNet2 = ReadNet("E:\\data\\arcgistest.gdb", "test", "test_Net1");
-            var a = OneToOneMatch(pGNet1, pGNet2);
-            var pointsf1 = a[0];
-            var pointsf2 = a[1];
-
-            //List<Esri.FileGDB.Point> points1 = ReadFileToGetPoint("E:\\data\\test_1.gdb", "test\\test1");
-            //List<Esri.FileGDB.Point> points2 = ReadFileToGetPoint("E:\\data\\test_1.gdb", "test\\test_Net1_Junctions");
-            //Dictionary<int, System.Drawing.PointF> pointsf1 = Transform(points1);
-            //Dictionary<int, System.Drawing.PointF> pointsf2 = Transform(points2);
-
-            int j = -2;
-            while (j != -1)
+            try
             {
-                Matrix M1 = GetMatrixFromPoint(pointsf1);
-                Matrix M2 = GetMatrixFromPoint(pointsf2);
-                int count = pointsf1.Count;
-                Matrix M = Disparity(M1, M2); //获取差异矩阵
-                j = argmax(M);         //根据差异矩阵 获取 j outline
-                if (j >= 0 && j < count)
-                {
-                    //pointsf1.Remove(j); //remove后记得将后面所有元素的key值前移
-                    //pointsf2.Remove(j);
-                    Removej(ref pointsf1, j);
-                    Removej(ref pointsf2, j);
-                }
-                else
-                {
-                    break;
-                }
-            }
+                //arcGIS engine权限注册
+                ESRI.ArcGIS.RuntimeManager.BindLicense(ProductCode.EngineOrDesktop);
+                //test();
+                //GetPoint("E:\\data\\test_1.gdb", "test_Net1");
+                //string databasePath = string.Empty;
+                //string dataSetName = string.Empty;
+                //string net1Name = string.Empty;
+                //string net2Name = string.Empty;
+                //Console.WriteLine("请输入文件地理信息数据库路径，数据集名称，几何网络名称1，几何网络名称2");
+                //databasePath = Console.ReadLine();
+                //dataSetName = Console.ReadLine();
+                //net1Name = Console.ReadLine();
+                //net2Name = Console.ReadLine();
+                //if (databasePath == string.Empty || dataSetName == string.Empty || net1Name == string.Empty || net2Name == string.Empty)
+                //{
+                //    Console.WriteLine("你的输入有误。");
+                //    return;
+                //}
+                //IGeometricNetwork pGNet1 = ReadNet(databasePath, dataSetName, net1Name);
+                //IGeometricNetwork pGNet2 = ReadNet(databasePath, dataSetName, net2Name);
+                IGeometricNetwork pGNet1 = ReadNet("E:\\data\\arcgistest.gdb", "test", "test_Net2");
+                IGeometricNetwork pGNet2 = ReadNet("E:\\data\\arcgistest.gdb", "test", "test_Net1");
 
-            //TestCreateFile(pointsf1);
-            return;
+                List<Dictionary<int, PointF>> pointsList = OneToOneMatch(pGNet1, pGNet2);
+                if (pointsList == null)
+                {
+                    Console.WriteLine("One to One Match error. without result");
+                    return;
+                }
+
+                //List<Esri.FileGDB.Point> points1 = ReadFileToGetPoint("E:\\data\\test_1.gdb", "test\\test1");
+                //List<Esri.FileGDB.Point> points2 = ReadFileToGetPoint("E:\\data\\test_1.gdb", "test\\test_Net1_Junctions");
+                //Dictionary<int, System.Drawing.PointF> pointsf1 = Transform(points1);
+                //Dictionary<int, System.Drawing.PointF> pointsf2 = Transform(points2);
+
+                Dictionary<int, System.Drawing.PointF> pointsf1 = pointsList[0];
+                Dictionary<int, System.Drawing.PointF> pointsf2 = pointsList[1];
+                if (pointsf1 == null || pointsf2 == null)
+                {
+                    Console.WriteLine("One to One Match error.");
+                    return;
+                }
+
+                TestCreateFile(pointsf1, "E:\\data\\Result.gdb", "firstResult1");
+                TestCreateFile(pointsf2, "E:\\data\\Result.gdb", "firstResult2");
+
+                int j = -2;
+                while (j != -1)
+                {
+                    Matrix M1 = GetMatrixFromPoint(pointsf1);
+                    Matrix M2 = GetMatrixFromPoint(pointsf2);
+                    int count = pointsf1.Count;
+                    Matrix M = Disparity(M1, M2); //获取差异矩阵
+                    if (M == null)
+                    {
+                        Console.WriteLine("fiald to get M.");
+                        return;
+                    }
+                    j = argmax(M);         //根据差异矩阵 获取 j outline
+                    if (j >= 0 && j < count)
+                    {
+                        //pointsf1.Remove(j); //remove后记得将后面所有元素的key值前移
+                        //pointsf2.Remove(j);
+                        Removej(ref pointsf1, j);
+                        Removej(ref pointsf2, j);
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+
+                TestCreateFile(pointsf1, "E:\\data\\Result.gdb", "result");
+                return;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("error" + e.Message);
+                return;
+            }
         }
 
 
         //将FileGDB中的point转换 并为其编号
-        //static Dictionary<int, System.Drawing.PointF> Transform(List<Esri.FileGDB.Point> points)
-        //{
-        //    Dictionary<int, System.Drawing.PointF> result = new Dictionary<int, PointF>();
-        //    int id = 0;
-        //    foreach (var one in points)
-        //    {
-        //        System.Drawing.PointF point = new System.Drawing.PointF(Convert.ToSingle(one.x), Convert.ToSingle(one.y));
-        //        result.Add(id, point);
-        //        id++;
-        //    }
-        //    return result;
-        //}
+        static Dictionary<int, System.Drawing.PointF> Transform(List<Esri.FileGDB.Point> points)
+        {
+            Dictionary<int, System.Drawing.PointF> result = new Dictionary<int, PointF>();
+            int id = 0;
+            foreach (var one in points)
+            {
+                System.Drawing.PointF point = new System.Drawing.PointF(Convert.ToSingle(one.x), Convert.ToSingle(one.y));
+                result.Add(id, point);
+                id++;
+            }
+            return result;
+        }
 
         //remove 同时 将后面的点编号-1
         static void Removej(ref Dictionary<int, System.Drawing.PointF> points, int j)
@@ -431,23 +456,23 @@ namespace CSharpTest
         }
 
         //测试 将结果点集 生成 .shp文件
-        //static void TestCreateFile(Dictionary<int, System.Drawing.PointF> points)
-        //{
-        //    Geodatabase geodatabase = Geodatabase.Open("E:\\data\\test_1.gdb");
-        //    Esri.FileGDB.Table table = geodatabase.OpenTable("\\result");
-        //    foreach (var one in points)
-        //    {
-        //        Esri.FileGDB.Row row = table.CreateRowObject();
-        //        PointShapeBuffer geom = new PointShapeBuffer();
-        //        geom.Setup(ShapeType.Point);
-        //        Esri.FileGDB.Point point = new Esri.FileGDB.Point(one.Value.X, one.Value.Y);
-        //        geom.point = point;
-        //        row.SetGeometry(geom);
-        //        table.Insert(row);
-        //    }
-        //    table.Close();
-        //    geodatabase.Close();
-        //    return;
-        //}
+        static void TestCreateFile(Dictionary<int, System.Drawing.PointF> points, string filePath, string tableName)
+        {
+            Geodatabase geodatabase = Geodatabase.Open(filePath);
+            Esri.FileGDB.Table table = geodatabase.OpenTable(tableName);
+            foreach (var one in points)
+            {
+                Esri.FileGDB.Row row = table.CreateRowObject();
+                PointShapeBuffer geom = new PointShapeBuffer();
+                geom.Setup(ShapeType.Point);
+                Esri.FileGDB.Point point = new Esri.FileGDB.Point(one.Value.X, one.Value.Y);
+                geom.point = point;
+                row.SetGeometry(geom);
+                table.Insert(row);
+            }
+            table.Close();
+            geodatabase.Close();
+            return;
+        }
     }
 }
